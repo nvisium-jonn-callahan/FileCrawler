@@ -28,6 +28,7 @@ term = tosearch = type = extfilter = outfile = None
 # extlist = {extension: [fcount, lcount]}
 extlist={}
 lockedfiles=[]
+binaryfiles=[]
 
 def main():
 	global term, tosearch, type, rec, verbose, extfilter, pr, case, outfile, linecount, typecount, errorhandling
@@ -121,6 +122,11 @@ def start():
 		for f in lockedfiles:
 			printline('\t%s'%f)
 		printline('\n[*] Note: Hidden files are unable to be opened via Python on Windows; please unhide all files you wish to scan.')
+	if len(binaryfiles) > 0:
+		printline('\n[!] Unable to open the following binary files:')
+		for f in binaryfiles:
+			printline('\t%s'%f)
+		printline('\n[*] Note: This script was built for py2 and cannot properly parse binary files when run with py3.')
 	if typecount:
 		if extfilter:
 			printline('[*] Number of occurrences of filtered file extensions:')
@@ -141,7 +147,7 @@ def start():
 
 		
 def searchfile(file, fext):
-	global term, pr, tosearch, rcount, fcount, lockedfiles, extlist
+	global term, pr, tosearch, rcount, fcount, lockedfiles, extlist, binaryfiles
 	count = 1
 	fcount+=1
 	mObj=None
@@ -169,7 +175,10 @@ def searchfile(file, fext):
 	except IOError:
 		lockedfiles.append(file)
 		vprint('[?] IOError thrown opening: %s'%file)
-	
+	except UnicodeDecodeError:
+		binaryfiles.append(file)
+		vprint('[?] UnicodeDecodeError thrown opening: %s'%file)
+
 	extlist[fext] = lcount
 	vprint('[?] Number of lines: %d' % count)
 	
